@@ -11,7 +11,8 @@ import { links } from "@/utils/links"
 import { Button } from "../ui/button"
 import { LuAlignLeft } from "react-icons/lu"
 import Link from "next/link"
-
+import { SignedIn,SignedOut,SignInButton,SignUpButton } from "@clerk/nextjs"
+import SignOutLink from "./SignOutLink"
 
 
 const LinksDropdown = () => {
@@ -24,6 +25,20 @@ const LinksDropdown = () => {
           </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-52" align="start" sideOffset={10}>
+        <SignedOut>
+          <DropdownMenuItem>
+            <SignInButton mode="modal">
+              <button className="w-full text-left">Login</button>
+            </SignInButton>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator/>
+          <DropdownMenuItem>
+            <SignUpButton mode="modal">
+              <button className="w-full text-left">Register</button>
+            </SignUpButton>
+          </DropdownMenuItem>
+        </SignedOut>
+        <SignedIn>
         {
           links?.map(item=>{
             return(
@@ -33,6 +48,11 @@ const LinksDropdown = () => {
             )
           })
         }
+        <DropdownMenuSeparator/>
+        <DropdownMenuItem>
+          <SignOutLink/>
+        </DropdownMenuItem>
+        </SignedIn>
       </DropdownMenuContent>
     </DropdownMenu>
   )
