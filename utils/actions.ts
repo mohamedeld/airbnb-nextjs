@@ -27,9 +27,7 @@ export const createProfileAction =async (prevState:any,formData:FormData)=>{
         hasProfile:true
       }
     })
-    return {
-      message:'profile created'
-    }
+    
   }catch(error){
     
     return {
