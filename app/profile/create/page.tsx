@@ -15,7 +15,7 @@ const CreateProfile = () => {
         <FormContainer action={createProfileAction}>
           <div className="grid md:grid-cols-2 gap-4 mt-4">
             <FormInput name="firstName" label="First Name" placeholder="Enter your first name" type="text"/>
-            <FormInput name="lastName" label="Last Name" placeholder="Enter your last name" type="text"/>
+            <FormInput name="lasName" label="Last Name" placeholder="Enter your last name" type="text"/>
             <FormInput name="userName" label="UserName" placeholder="Enter your userName" type="text"/>
           </div>
          <SubmitButton className="" text="Create Profile"/>
