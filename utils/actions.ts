@@ -3,6 +3,7 @@
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { createProfileSchema } from "./schemas";
 import prisma from "./db";
+import { redirect } from "next/navigation";
 
 export const createProfileAction =async (prevState:any,formData:FormData)=>{
   try{
@@ -35,4 +36,5 @@ export const createProfileAction =async (prevState:any,formData:FormData)=>{
       message:error instanceof Error ? error?.message :'there was an error'
     }
   }
+  redirect("/")
 }
