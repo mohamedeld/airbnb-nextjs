@@ -30,9 +30,9 @@ export const createProfileAction =async (prevState:any,formData:FormData)=>{
       message:'profile created'
     }
   }catch(error){
-    console.log(error)
+    
     return {
-      message:'there was an error'
+      message:error instanceof Error ? error?.message :'there was an error'
     }
   }
 }
