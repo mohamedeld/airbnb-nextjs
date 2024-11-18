@@ -4,10 +4,16 @@ import FormInput from "@/components/form/FormInput";
 import SubmitButton from "@/components/form/SubmitButton";
 import { Button } from "@/components/ui/button";
 import { createProfileAction } from "@/utils/actions";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 
 
-const CreateProfile = () => {
+const CreateProfile = async () => {
+  const profile = await currentUser();
+  if(!profile?.privateMetadata?.hasProfile){
+    redirect("/")
+  }
   return (
     <section>
       <h1 className="text-2xl font-semibold mb-8 capitalize">new User</h1>
@@ -18,7 +24,7 @@ const CreateProfile = () => {
             <FormInput name="lasName" label="Last Name" placeholder="Enter your last name" type="text"/>
             <FormInput name="userName" label="UserName" placeholder="Enter your userName" type="text"/>
           </div>
-         <SubmitButton className="" text="Create Profile"/>
+         <SubmitButton size="lg" className="" text="Create Profile"/>
          </FormContainer>
       </div>
     </section>
