@@ -1,7 +1,7 @@
 'use server';
 
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
-import { createProfileSchema, imageSchema, validateWithZodSchema } from "./schemas";
+import { createProfileSchema, imageSchema, propertySchema, validateWithZodSchema } from "./schemas";
 import prisma from "./db";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -139,4 +139,24 @@ export const updateProfileImageAction = async(prevState:any,formData:FormData):P
       message:error instanceof Error ? error?.message : 'Something went wrong'
     }
   }
+}
+
+export const createPropertyAction= async (prevState:any,formData:FormData):Promise<{message:string}>=>{
+  const user = getAuthUser();
+  try{
+    const rowData = Object.fromEntries(formData);
+    const validateFields = validateWithZodSchema(propertySchema,rowData);
+
+    
+
+    return {
+      message: 'property created successfully'
+    }
+  }catch(error){
+    console.log(error);
+    return {
+      message:error instanceof Error ? error?.message : 'Something went wrong'
+    }
+  }
+  redirect("/rentals")
 }
