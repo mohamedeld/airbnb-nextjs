@@ -142,25 +142,30 @@ export const updateProfileImageAction = async(prevState:any,formData:FormData):P
 }
 
 export const createPropertyAction= async (prevState:any,formData:FormData):Promise<{message:string}>=>{
-  const user = getAuthUser();
+  const user = await getAuthUser();
+  if(!user){
+    redirect("/");
+  }
   try{
     const rowData = Object.fromEntries(formData);
+    const file = formData.get('image') as File;
     const validateFields = validateWithZodSchema(propertySchema,rowData);
-
-    // await prisma.property.create({
-    //   data:{
-
-    //   }
-    // })
-
-    return {
-      message: 'property created successfully'
-    }
+    // const validatedFile = validateWithZodSchema(imageSchema,{image:file});
+    const fullPath = await uploadImage(file);
+    
+    await prisma.property.create({
+      data:{
+        ...validateFields,
+        image:fullPath,
+        profileId:user.id
+      }
+    })
+    revalidatePath("/");
   }catch(error){
     console.log(error);
     return {
       message:error instanceof Error ? error?.message : 'Something went wrong'
     }
   }
-  redirect("/rentals")
+  redirect("/")
 }

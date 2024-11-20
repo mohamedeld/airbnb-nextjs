@@ -16,24 +16,34 @@ export function validateWithZodSchema<T>(schema:ZodSchema<T>,data:unknown):T{
   }
   return result?.data
 }
+function validateFile() {
+  const maxUploadSize = 1024 * 1024; // 1MB
+  const acceptedFileTypes = ['image/'];
+  
+  return z.custom<File>((file) => {
+    if (!(file instanceof File)) {
+      return false;
+    }
+    
+    // Check file size
+    if (file.size > maxUploadSize) {
+      return false;
+    }
+    
+    // Check file type
+    if (!acceptedFileTypes.some(type => file.type.startsWith(type))) {
+      return false;
+    }
+    
+    return true;
+  }, {
+    message: "Invalid file. Must be an image less than 1MB"
+  });
+}
 export const imageSchema = z.object({
-  // image: validateFile(),
+   image: validateFile(),
 });
 
-function validateFile() {
-  const maxUploadSize = 1024 * 1024;
-  const acceptedFileTypes = ['image/'];
-  return z
-    .instanceof(File)
-    .refine((file) => {
-      return !file || file.size <= maxUploadSize;
-    }, `File size must be less than 1 MB`)
-    .refine((file) => {
-      return (
-        !file || acceptedFileTypes.some((type) => file.type.startsWith(type))
-      );
-    }, 'File must be an image');
-}
 
 export const propertySchema = z.object({
   name: z
@@ -65,7 +75,7 @@ export const propertySchema = z.object({
       message: 'description must be between 10 and 1000 words.',
     }
   ),
-  country: z.string(),
+  country: z.string({message:"country is required"}),
   guests: z.coerce.number().int().min(0, {
     message: 'guest amount must be a positive number.',
   }),
@@ -78,5 +88,5 @@ export const propertySchema = z.object({
   baths: z.coerce.number().int().min(0, {
     message: 'bahts amount must be a positive number.',
   }),
-  amenities: z.string(),
+  amenities: z.string({message:"amenities is required"}),
 });

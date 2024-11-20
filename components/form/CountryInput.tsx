@@ -10,7 +10,7 @@ const CountryInput = ({defaultValue}:CountryInputProps) => {
   return (
     <div className="mb">
       <Label htmlFor={name} className="capitalize">country</Label>
-      <Select defaultValue={defaultValue || formattedCountries[0]?.code}>
+      <Select defaultValue={defaultValue || formattedCountries[0]?.code} name={name} required>
         <SelectTrigger>
           <SelectValue/>
         </SelectTrigger>
