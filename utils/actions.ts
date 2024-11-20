@@ -147,7 +147,11 @@ export const createPropertyAction= async (prevState:any,formData:FormData):Promi
     const rowData = Object.fromEntries(formData);
     const validateFields = validateWithZodSchema(propertySchema,rowData);
 
-    
+    // await prisma.property.create({
+    //   data:{
+
+    //   }
+    // })
 
     return {
       message: 'property created successfully'
