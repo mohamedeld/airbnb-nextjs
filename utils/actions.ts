@@ -6,6 +6,7 @@ import prisma from "./db";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { uploadImage } from "./supabase";
+import { PropertyCardProps } from "./types";
 
 export const getAuthUser = async ()=>{
   try{
@@ -168,4 +169,38 @@ export const createPropertyAction= async (prevState:any,formData:FormData):Promi
     }
   }
   redirect("/")
+}
+
+type fetchPropertiesProps = {
+  search?:string;
+  category?:string;
+}
+
+export const fetchProperties = async ({search='',category}:fetchPropertiesProps)=>{
+  try{
+    const properties = await prisma.property.findMany({
+      where:{
+        category,
+        OR:[
+          {name:{contains:search,mode:'insensitive'}},
+          {tagline:{contains:search,mode:'insensitive'}},
+        ]
+      },
+      select:{
+        id:true,
+        name:true,
+        tagline:true,
+        country:true,
+        price:true,
+        image:true
+      },
+      orderBy:{
+        createdAt:'desc'
+      }
+    })
+    return properties as PropertyCardProps[];
+  }catch(error){
+    console.log(error);
+    return []
+  }
 }
