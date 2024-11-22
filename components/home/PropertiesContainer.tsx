@@ -16,7 +16,7 @@ const PropertiesContainer = async ({
     search,
     category
   });
-
+  console.log(properties)
   if(properties?.length === 0){
     return (
       <EmptyList heading='No results.'
