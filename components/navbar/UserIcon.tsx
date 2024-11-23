@@ -6,7 +6,7 @@ const UserIcon =async () => {
   const profileImage = await fetchProfileImage();
   if(profileImage){
     return (
-      <Image className="rounded-full object-cover" width={24} height={24} alt="Profile image" src={profileImage}/>
+      <Image className="rounded-[50%] object-cover !h-[24px]" width={24} height={24} alt="Profile image" src={profileImage}/>
     )
   }
   return (

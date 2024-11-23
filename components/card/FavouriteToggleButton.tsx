@@ -15,7 +15,7 @@ const FavouriteToggleButton = async ({propertyId}:FavoriteToggleButtonProps) => 
       <CardSignInButton/>
     )
   }
-  const favoriteId = await fetchFavorite({propertyId});
+  const favoriteId:string | null = await fetchFavorite({propertyId}) || null;
   
   return (
     <Button className="p-2 cursor-pointer" size={"icon"} variant={"outline"}>

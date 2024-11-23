@@ -1,263 +1,312 @@
-'use server';
+"use server";
 
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
-import { createProfileSchema, imageSchema, propertySchema, validateWithZodSchema } from "./schemas";
+import {
+  createProfileSchema,
+  imageSchema,
+  propertySchema,
+  validateWithZodSchema,
+} from "./schemas";
 import prisma from "./db";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { uploadImage } from "./supabase";
 import { PropertyCardProps } from "./types";
 
-export const getAuthUser = async ()=>{
-  try{
+export const getAuthUser = async () => {
+  try {
     const user = await currentUser();
-    if(!user){
+    if (!user) {
       throw new Error("user not found");
     }
-    if(!user?.privateMetadata?.hasProfile){
-      redirect('/profile/create')
+    if (!user?.privateMetadata?.hasProfile) {
+      redirect("/profile/create");
     }
     return user;
-  }catch(error){
-    console.log(error)
+  } catch (error) {
+    console.log(error);
   }
-}
+};
 
-export const createProfileAction =async (prevState:any,formData:FormData)=>{
-  try{
+export const createProfileAction = async (
+  prevState: any,
+  formData: FormData
+) => {
+  try {
     const user = await currentUser();
-    if(!user){
+    if (!user) {
       throw new Error("Please login to create a profile");
     }
     const rowData = Object.fromEntries(formData);
     const validateFields = createProfileSchema.parse(rowData);
     await prisma.profile.create({
-      data:{
-        clerkId:user?.id,
-        email:user?.emailAddresses[0]?.emailAddress,
-        profileImage:user?.imageUrl ?? '',
-        ...validateFields
-      }
-    })
+      data: {
+        clerkId: user?.id,
+        email: user?.emailAddresses[0]?.emailAddress,
+        profileImage: user?.imageUrl ?? "",
+        ...validateFields,
+      },
+    });
     // need to connect my profile with clerk profile
-    await clerkClient.users.updateUserMetadata(user?.id,{
-      privateMetadata:{
-        hasProfile:true
-      }
-    })
-    
-  }catch(error){
-    
+    await clerkClient.users.updateUserMetadata(user?.id, {
+      privateMetadata: {
+        hasProfile: true,
+      },
+    });
+  } catch (error) {
     return {
-      message:error instanceof Error ? error?.message :'there was an error'
-    }
+      message: error instanceof Error ? error?.message : "there was an error",
+    };
   }
-  redirect("/")
-}
+  redirect("/");
+};
 
-export const fetchProfileImage = async ()=>{
-  try{
+export const fetchProfileImage = async () => {
+  try {
     const user = await currentUser();
-    if(!user){
-      throw new Error("there is no user found")
+    if (!user) {
+      throw new Error("there is no user found");
     }
     const profile = await prisma.profile.findUnique({
-      where:{
-        clerkId:user?.id
+      where: {
+        clerkId: user?.id,
       },
-      select:{
-        profileImage:true
-      }
-    })
-    return profile?.profileImage
-  }catch(error){
-    console.log(error)
+      select: {
+        profileImage: true,
+      },
+    });
+    return profile?.profileImage;
+  } catch (error) {
+    console.log(error);
   }
-}
+};
 
-export const fetchProfile = async()=>{
+export const fetchProfile = async () => {
   const user = await getAuthUser();
   const profile = prisma.profile.findUnique({
-    where:{
-      clerkId:user?.id
-    }
-  })
-  if(!profile){
-    redirect("/profile/create")
+    where: {
+      clerkId: user?.id,
+    },
+  });
+  if (!profile) {
+    redirect("/profile/create");
   }
   return profile;
-}
+};
 
-export const updateProfileAction = async (prevState:any,formData:FormData):Promise<{message:string}>=>{
-  try{  
-      const user = await getAuthUser();
-      const rawData = Object.fromEntries(formData);
-      const validateFields = createProfileSchema.safeParse(rawData);
-      if(!validateFields?.success){
-        const errors = validateFields?.error.errors?.map(error=> error?.message);
-        throw new Error(errors?.join(","))
-      }
-      await prisma.profile.update({
-        where:{
-          clerkId:user?.id
-        },
-        data:validateFields?.data
-      })
-      revalidatePath("/profile")
-    return {
-      message:"Updated profile successfully"
+export const updateProfileAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  try {
+    const user = await getAuthUser();
+    const rawData = Object.fromEntries(formData);
+    const validateFields = createProfileSchema.safeParse(rawData);
+    if (!validateFields?.success) {
+      const errors = validateFields?.error.errors?.map(
+        (error) => error?.message
+      );
+      throw new Error(errors?.join(","));
     }
-  }catch(error){
+    await prisma.profile.update({
+      where: {
+        clerkId: user?.id,
+      },
+      data: validateFields?.data,
+    });
+    revalidatePath("/profile");
     return {
-      message:error instanceof Error ? error?.message : 'Something went wrong'
-    }
+      message: "Updated profile successfully",
+    };
+  } catch (error) {
+    return {
+      message: error instanceof Error ? error?.message : "Something went wrong",
+    };
   }
-}
+};
 
-export const updateProfileImageAction = async(prevState:any,formData:FormData):Promise<{message:string}>=>{
-  try{
+export const updateProfileImageAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
+  try {
     const user = await getAuthUser();
     const image = formData.get("image") as File;
     // const validateFields = validateWithZodSchema(imageSchema,{image});
     const fullPath = await uploadImage(image);
 
     await prisma?.profile?.update({
-      where:{
-        clerkId:user?.id
+      where: {
+        clerkId: user?.id,
       },
-      data:{
-        profileImage:fullPath
-      }
-    })
+      data: {
+        profileImage: fullPath,
+      },
+    });
 
     revalidatePath("/profile");
     return {
-      message:"image updated successfully"
-    }
-  }catch(error){
+      message: "image updated successfully",
+    };
+  } catch (error) {
     console.log(error);
     return {
-      message:error instanceof Error ? error?.message : 'Something went wrong'
-    }
+      message: error instanceof Error ? error?.message : "Something went wrong",
+    };
   }
-}
+};
 
-export const createPropertyAction= async (prevState:any,formData:FormData):Promise<{message:string}>=>{
+export const createPropertyAction = async (
+  prevState: any,
+  formData: FormData
+): Promise<{ message: string }> => {
   const user = await getAuthUser();
-  if(!user){
+  if (!user) {
     redirect("/");
   }
-  try{
+  try {
     const rowData = Object.fromEntries(formData);
-    const file = formData.get('image') as File;
-    const validateFields = validateWithZodSchema(propertySchema,rowData);
+    const file = formData.get("image") as File;
+    const validateFields = validateWithZodSchema(propertySchema, rowData);
     // const validatedFile = validateWithZodSchema(imageSchema,{image:file});
     const fullPath = await uploadImage(file);
-    
+
     await prisma.property.create({
-      data:{
+      data: {
         ...validateFields,
-        image:fullPath,
-        profileId:user.id
-      }
-    })
+        image: fullPath,
+        profileId: user.id,
+      },
+    });
     revalidatePath("/");
-  }catch(error){
+  } catch (error) {
     console.log(error);
     return {
-      message:error instanceof Error ? error?.message : 'Something went wrong'
-    }
+      message: error instanceof Error ? error?.message : "Something went wrong",
+    };
   }
-  redirect("/")
-}
+  redirect("/");
+};
 
 type fetchPropertiesProps = {
-  search?:string;
-  category?:string;
-}
+  search?: string;
+  category?: string;
+};
 
-export const fetchProperties = async ({search='',category}:fetchPropertiesProps)=>{
-  try{
+export const fetchProperties = async ({
+  search = "",
+  category,
+}: fetchPropertiesProps) => {
+  try {
     const properties = await prisma.property.findMany({
-      where:{
+      where: {
         category,
-        OR:[
-          {name:{contains:search,mode:'insensitive'}},
-          {tagline:{contains:search,mode:'insensitive'}},
-        ]
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { tagline: { contains: search, mode: "insensitive" } },
+        ],
       },
-      select:{
-        id:true,
-        name:true,
-        tagline:true,
-        country:true,
-        price:true,
-        image:true
+      select: {
+        id: true,
+        name: true,
+        tagline: true,
+        country: true,
+        price: true,
+        image: true,
       },
-      orderBy:{
-        createdAt:'desc'
-      }
-    })
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
     return properties as PropertyCardProps[];
-  }catch(error){
+  } catch (error) {
     console.log(error);
-    return []
+    return [];
   }
-}
+};
 
 type FetchFavoritesProps = {
-  propertyId:string
-}
-export const fetchFavorite = async ({propertyId}:FetchFavoritesProps)=>{
+  propertyId: string;
+};
+export const fetchFavorite = async ({ propertyId }: FetchFavoritesProps) => {
   const user = await getAuthUser();
-  try{
+  try {
     const favorite = await prisma.favorite.findFirst({
-      where:{
+      where: {
         propertyId,
-        profileId:user?.id
+        profileId: user?.id,
       },
-      select:{
-        id:true
-      }
-    })
+      select: {
+        id: true,
+      },
+    });
     return favorite?.id || null;
-  }catch(error){
+  } catch (error) {
     console.log(error);
   }
-}
+};
 
-export const toggleFavoriteAction = async(prevState:{
-  propertyId:string;
-  favoriteId:string | null;
-  pathname:string;
-})=>{
+export const toggleFavoriteAction = async (prevState: {
+  propertyId: string;
+  favoriteId: string | null;
+  pathname: string;
+}) => {
   const user = await getAuthUser();
-  if(!user){
-    throw new Error("please login")
+  if (!user) {
+    throw new Error("please login");
   }
-  try{
-    const {propertyId,favoriteId,pathname} = prevState;
-    if(favoriteId){
+  try {
+    const { propertyId, favoriteId, pathname } = prevState;
+    if (favoriteId) {
       await prisma.favorite.delete({
-        where:{
-          id:favoriteId
-        }
-      })
-    }else{
+        where: {
+          id: favoriteId,
+        },
+      });
+    } else {
       await prisma.favorite.create({
-        data:{
+        data: {
           propertyId,
-          profileId:user?.id
-        }
-      })
+          profileId: user?.id,
+        },
+      });
     }
-    revalidatePath(pathname)
+    revalidatePath(pathname);
     return {
-      message:favoriteId? 'Removed from favorites' : 'Added to favorites'
-    }
-  }catch(error){
+      message: favoriteId ? "Removed from favorites" : "Added to favorites",
+    };
+  } catch (error) {
     return {
-      message:error instanceof Error ? error?.message : 'something went wrong'
-    }
+      message: error instanceof Error ? error?.message : "something went wrong",
+    };
   }
-}
+};
+
+export const fetchFavorites = async () => {
+  try {
+    const user = await getAuthUser();
+    if (!user) {
+      throw new Error("Plase login");
+    }
+    const favorites = await prisma.favorite.findMany({
+      where: {
+        profileId: user?.id,
+      },
+      select: {
+        property: {
+          select: {
+            id: true,
+            name: true,
+            tagline: true,
+            country: true,
+            price: true,
+            image: true,
+          },
+        },
+      },
+    });
+    return favorites?.map((favorite) => favorite?.property);
+  } catch (error) {
+    console.log(error);
+  }
+};
