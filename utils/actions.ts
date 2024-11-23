@@ -204,3 +204,60 @@ export const fetchProperties = async ({search='',category}:fetchPropertiesProps)
     return []
   }
 }
+
+type FetchFavoritesProps = {
+  propertyId:string
+}
+export const fetchFavorite = async ({propertyId}:FetchFavoritesProps)=>{
+  const user = await getAuthUser();
+  try{
+    const favorite = await prisma.favorite.findFirst({
+      where:{
+        propertyId,
+        profileId:user?.id
+      },
+      select:{
+        id:true
+      }
+    })
+    return favorite?.id || null;
+  }catch(error){
+    console.log(error);
+  }
+}
+
+export const toggleFavoriteAction = async(prevState:{
+  propertyId:string;
+  favoriteId:string | null;
+  pathname:string;
+})=>{
+  const user = await getAuthUser();
+  if(!user){
+    throw new Error("please login")
+  }
+  try{
+    const {propertyId,favoriteId,pathname} = prevState;
+    if(favoriteId){
+      await prisma.favorite.delete({
+        where:{
+          id:favoriteId
+        }
+      })
+    }else{
+      await prisma.favorite.create({
+        data:{
+          propertyId,
+          profileId:user?.id
+        }
+      })
+    }
+    revalidatePath(pathname)
+    return {
+      message:favoriteId? 'Removed from favorites' : 'Added to favorites'
+    }
+  }catch(error){
+    return {
+      message:error instanceof Error ? error?.message : 'something went wrong'
+    }
+  }
+}
