@@ -310,3 +310,19 @@ export const fetchFavorites = async () => {
     console.log(error);
   }
 };
+
+export const fetchPropertyDetails = async (id:string)=>{
+  try{
+    const property = await prisma.property.findUnique({
+      where:{
+        id
+      },
+      include:{
+        profile:true
+      }
+    })
+    return property;
+  }catch(error){
+    console.log(error)
+  }
+}
