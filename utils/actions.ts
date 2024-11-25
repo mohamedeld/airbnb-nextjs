@@ -355,3 +355,82 @@ export const createReviewAction = async (prevState:any,formData:FormData):Promis
     }
   }
 }
+
+export const fetchPropertyReview = async (propertyId:string)=>{
+  try{
+    const reviews = await prisma.review.findMany({
+      where:{
+        propertyId
+      },
+      select:{
+        id:true,
+        rating:true,
+        comment:true,
+        profile:{
+          select:{
+            firstName:true,
+            profileImage:true
+          }
+        }
+      },
+      orderBy:{
+        createdAt:'desc'
+      }
+    })
+    return reviews;
+  }catch(error){
+    console.log(error);
+  }
+}
+
+export const fetchPropertyReviewByUser = async()=>{
+  const user = await getAuthUser();
+  if(!user){
+    throw new Error("plase login")
+  }
+  try{
+    const reviews = await prisma.review.findMany({
+      where:{
+        profileId:user?.id
+      },
+      select:{
+        id:true,
+        rating:true,
+        comment:true,
+        property:{
+          select:{
+            image:true,
+            name:true
+          }
+        }
+      }
+    })
+    return reviews;
+  }catch(error){
+    console.log(error)
+  }
+}
+
+export const deleteReviewAction = async (prevState:{reviewId:string}):Promise<{message:string}>=>{
+  const {reviewId} = prevState;
+  const user = await getAuthUser();
+  if(!user){
+    throw new Error("plase login")
+  }
+  try{
+    await prisma.review.delete({
+      where:{
+        id:reviewId,
+        profileId:user?.id
+      }
+    })   
+    revalidatePath("/reviews")
+    return {
+      message:'Review Delete Successfully'
+    }
+  }catch(error){
+    return {
+      message:error instanceof Error ? error?.message : 'something went wrong'
+    }
+  }
+}
