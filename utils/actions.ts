@@ -458,3 +458,18 @@ export const fetchPropertyRating = async (propertyId:string)=>{
     console.log(error);
   }
 }
+
+
+export const findExistingReview = async(userId:string,propertyId:string)=>{
+  try{
+    const result = await prisma.review.findFirst({
+      where:{
+        propertyId,
+        profileId:userId
+      }
+    })
+    return result;
+  }catch(error){
+    console.log(error);
+  }
+}

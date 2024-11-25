@@ -1,8 +1,9 @@
 import { fetchPropertyRating } from "@/utils/actions";
-import {FaStar} from "react-icons/fa"
+import {FaStar} from "react-icons/fa";
+
 type PropertyRatingProps = {
   propertyId:string;
-  inPage:boolean
+  inPage:boolean;
 }
 
 
