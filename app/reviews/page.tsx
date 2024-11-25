@@ -1,5 +1,6 @@
 import EmptyList from "@/components/home/EmptyList";
 import Title from "@/components/properties/Title";
+import DeleteReview from "@/components/reviews/DeleteReview";
 import ReviewCard from "@/components/reviews/ReviewCard";
 import { fetchPropertyReviewByUser } from "@/utils/actions"
 
@@ -22,7 +23,7 @@ const ReviewsPage = async () => {
           }
           return (
             <ReviewCard reviewInfo={reviewInfo} key={review?.id}>
-              <></>
+              <DeleteReview reviewId={review?.id}/>
             </ReviewCard>
           )
         })}

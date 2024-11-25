@@ -15,7 +15,7 @@ export const links:NavLink[] = [
   },
   {
     href:'/bookings',
-    label:'Boolings'
+    label:'Bookings'
   },
   {
     href:'/reviews',
