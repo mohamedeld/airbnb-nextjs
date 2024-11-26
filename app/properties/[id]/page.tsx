@@ -1,7 +1,7 @@
+
 import FavouriteToggleButton from "@/components/card/FavouriteToggleButton";
 import PropertyRating from "@/components/card/PropertyRating";
 import Amenities from "@/components/properties/Amenities";
-import BookingCalendar from "@/components/properties/BookingCalendar";
 import BreadCrumbs from "@/components/properties/BreadCrumbs";
 import Description from "@/components/properties/Description";
 import ImageContainer from "@/components/properties/ImageContainer";
@@ -27,6 +27,11 @@ const DynamicMap = dynamic(()=> import("@/components/properties/PropertyMap"),{
   ssr:false,
   loading:()=> <Skeleton className="h-[400px] w-full"/>
 });
+
+const DynamicBookingCalendar = dynamic(()=> import("@/components/bookings/BookingWrapper"),{
+  ssr:false,
+  loading:()=><Skeleton className="h-[200px] w-full"/>
+})
 
 const PropertyDetailPage = async ({params}:PropertyDetailPageParams) => {
   const {id} = params;
@@ -72,7 +77,7 @@ const PropertyDetailPage = async ({params}:PropertyDetailPageParams) => {
         </div>
         <div className="lg:col-span-4 flex flex-col items-center">
           {/* calender */}
-          <BookingCalendar/>
+          <DynamicBookingCalendar propertyId={property?.id} price={property?.price} bookings={property?.Booking} />
         </div>
       </section>
       {
