@@ -522,3 +522,60 @@ export const createBookingAction = async (prevState:{
   }
   redirect("/bookings")
 }
+
+export const fetchBookings = async()=>{
+  try{
+    const user = await getAuthUser();
+  if(!user){
+    throw new Error("plase login")
+  }
+
+  const bookings = await prisma.booking.findMany({
+    where:{
+      profileId:user?.id
+    },
+    include:{
+      property:{
+        select:{
+          id:true,
+          name:true,
+          country:true
+        }
+      }
+    },
+    orderBy:{
+      createdAt:'desc'
+    }
+  });
+  return bookings;
+  }catch(error){
+    console.log(error);
+  }
+}
+
+export const deleteBookingAction = async (prevState:{
+  bookingId:string
+})=>{
+  try{
+    const user = await getAuthUser();
+    if(!user){
+      throw new Error("plase login")
+    }
+    const {bookingId} = prevState;
+    await prisma.booking.delete({
+      where:{
+        id:bookingId,
+        profileId:user?.id
+      }
+    })
+    revalidatePath("/bookings");
+    return {
+      message:"Booking deleted successfully"  
+    }
+  }catch(error){
+    console.log(error);
+    return {
+      message:error instanceof Error ? error?.message :'Something went wrong'
+    }
+  }
+}
